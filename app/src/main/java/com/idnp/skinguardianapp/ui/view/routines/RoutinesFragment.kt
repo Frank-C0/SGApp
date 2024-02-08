@@ -3,13 +3,18 @@ package com.idnp.skinguardianapp.ui.view.routines
 import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import androidx.appcompat.widget.AppCompatButton
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.idnp.skinguardianapp.R
@@ -17,6 +22,10 @@ import com.idnp.skinguardianapp.data.adapters.RoutinesAdapter
 import com.idnp.skinguardianapp.data.model.Routine
 import com.idnp.skinguardianapp.data.services.TimerForegroundService
 import com.idnp.skinguardianapp.databinding.FragmentRoutinesBinding
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 
 class RoutinesFragment : Fragment() {
@@ -27,7 +36,12 @@ class RoutinesFragment : Fragment() {
     private lateinit var btnAddRoutine: AppCompatButton
 
     private val routines = mutableListOf(
-        Routine("protector Solar","utilizar protector solar todos los dias"),
+        Routine(
+            "protector Solar",
+            "utilizar protector solar todos los dias",
+            true,
+            30000L
+        ),
     )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,13 +73,13 @@ class RoutinesFragment : Fragment() {
         routinesAdapter = RoutinesAdapter(
             routines,
             {pos -> onItemSelected(pos)},
-            {pos ->
+            {time ->
                 val startIntent = Intent(context, TimerForegroundService::class.java)
                 startIntent.putExtra(
                     TimerForegroundService.COMMAND_ID,
                     TimerForegroundService.COMMAND_START
                 )
-                startIntent.putExtra(TimerForegroundService.STARTED_TIMER_TIME_MS, 20000L)
+                startIntent.putExtra(TimerForegroundService.STARTED_TIMER_TIME_MS, time)
                 context?.startService(startIntent)
             })
         rvRoutines.layoutManager = LinearLayoutManager(context)
@@ -73,6 +87,8 @@ class RoutinesFragment : Fragment() {
 
     }
 
+
+    var timeInMilliseconds:Long = 0;
     private fun showDialog(){
         val dialog = Dialog(requireContext())
 
@@ -81,6 +97,27 @@ class RoutinesFragment : Fragment() {
         val btnAddRoutine: Button = dialog.findViewById(R.id.btnAddRoutine)
         val etRoutineTitle: EditText = dialog.findViewById(R.id.etRoutineTitle)
         val etRoutineDescription: EditText = dialog.findViewById(R.id.etRoutineDescription)
+        val editTextTime: EditText = dialog.findViewById(R.id.editTextTime)
+        val checkBoxTemporizador: CheckBox = dialog.findViewById(R.id.checkBoxTemporizador)
+
+        editTextTime.addTextChangedListener(object: TextWatcher{
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun afterTextChanged(p0: Editable?) {
+                val timeString = editTextTime.text.toString()
+                timeInMilliseconds = TextTimeToMilliseconds(timeString)
+
+            }
+
+        })
+
+
         btnAddRoutine.setOnClickListener {
             val currentRoutineTitle = etRoutineTitle.text.toString()
             val currentRoutineDesc = etRoutineDescription.text.toString()
@@ -89,9 +126,8 @@ class RoutinesFragment : Fragment() {
                 routines.add(Routine(
                     etRoutineTitle.text.toString(),
                     etRoutineDescription.text.toString(),
-                    false,
-                    true,
-                    30000L
+                    checkBoxTemporizador.isChecked,
+                    timeInMilliseconds
                 ))
                 updateTasks()
                 dialog.hide()
@@ -110,4 +146,23 @@ class RoutinesFragment : Fragment() {
         routinesAdapter.notifyDataSetChanged()
     }
 
+
+    private fun TextTimeToMilliseconds(timeString: String): Long{
+
+        try {
+            val formato = SimpleDateFormat("HH:mm:ss")
+            formato.isLenient = false // Esto hace que el parseo sea estricto
+            formato.timeZone = TimeZone.getTimeZone("UTC")
+
+            val date = formato.parse(timeString)
+            date?.let {
+                return it.time
+            }
+        } catch (e: Exception) {
+            // Manejar cualquier error que pueda ocurrir durante el proceso de conversión
+            println("Error al convertir el tiempo: ${e.message}")
+        }
+
+        return 0
+    }
 }

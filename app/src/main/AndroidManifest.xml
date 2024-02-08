@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+<!--    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />-->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
@@ -33,10 +35,8 @@
             android:name=".data.services.TimerForegroundService"
             />
         <service
-            android:name=".data.services.TimerTaskService"
-
+            android:name=".data.services.LightSensorService"
             />
-        <receiver android:name=".data.services.TimerBroadcastReceiver"/>
 
     </application>
 

@@ -33,7 +33,7 @@
         android:orientation="horizontal">
 
         <CheckBox
-            android:id="@+id/checkBox"
+            android:id="@+id/checkBoxTemporizador"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Temporizador" />
@@ -43,7 +43,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:inputType="time" />
+            android:inputType="time"
+            android:text="00:00:00"/>
 
     </LinearLayout>
 
@@ -54,5 +55,6 @@
         android:background="@drawable/button3"
         android:text="Crear"
         android:textColor="@color/white" />
+
 
 </androidx.appcompat.widget.LinearLayoutCompat>

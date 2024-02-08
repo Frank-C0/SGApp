@@ -10,7 +10,7 @@ import com.idnp.skinguardianapp.data.model.Routine
 class RoutinesAdapter(
     var routines: List<Routine>,
     private val onRoutineSelected: (Int)-> Unit,
-    private val onButtonClicked: (Int)-> Unit
+    private val onButtonClicked: (Long)-> Unit
 ): RecyclerView.Adapter<RoutinesViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoutinesViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_routine,parent,false)

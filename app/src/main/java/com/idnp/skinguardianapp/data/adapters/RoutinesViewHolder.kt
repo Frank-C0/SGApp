@@ -22,7 +22,7 @@ class RoutinesViewHolder(
         routine: Routine,
         position: Int,
         onCheckBoxClicked: (Int) -> Unit,
-        onButtonClick: (Int) -> Unit
+        onButtonClick: (Long) -> Unit
     ){
         tvRoutineTitle.text = routine.title
         tvRoutineDesc.text = routine.Description
@@ -40,8 +40,22 @@ class RoutinesViewHolder(
             tvRoutineDesc.paintFlags = tvRoutineDesc.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
         }
 
-        binding.button.setOnClickListener{onButtonClick(position)}
-        binding.cbRoutine.setOnClickListener{onCheckBoxClicked(position)}
+        if(routine.tieneTemporizador){
+
+            binding.tiempoTemporizador.text = convertirMilisegundosAHorasMinutosSegundos(routine.tiempoTemporizador)
+            binding.button.setOnClickListener{onButtonClick(routine.tiempoTemporizador)}
+            binding.cbRoutine.setOnClickListener{onCheckBoxClicked(position)}
+        }else{
+            binding.temporizadorContainer.visibility = View.GONE
+        }
+
     }
 
+    fun convertirMilisegundosAHorasMinutosSegundos(milisegundos: Long): String {
+        val horas = (milisegundos / (1000 * 60 * 60)) % 24
+        val minutos = (milisegundos / (1000 * 60)) % 60
+        val segundos = (milisegundos / 1000) % 60
+
+        return String.format("%02d:%02d:%02d", horas, minutos, segundos)
+    }
 }
