@@ -12,12 +12,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.idnp.skinguardianapp.data.broadcastReceivers.NotificationBroadcastReceiver
 
 class TimerForegroundService : Service() {
 
@@ -74,6 +76,12 @@ class TimerForegroundService : Service() {
 
     private fun startForegroundAndShowNotification() {
         createChannel()
+        val cancelIntent = Intent(this, NotificationBroadcastReceiver::class.java).apply {
+            action = CANCEL_ACTION
+        }
+        val cancelPendingIntent: PendingIntent =
+            PendingIntent.getBroadcast(this, 0, cancelIntent, PendingIntent.FLAG_IMMUTABLE)
+
         notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Timer")
             .setGroup("Timer")
@@ -83,6 +91,7 @@ class TimerForegroundService : Service() {
             .setContentIntent(getPendingIntent())
             .setSmallIcon(android.R.drawable.alert_light_frame)
             .setOngoing(true)
+            .addAction(android.R.drawable.ic_delete, "Cancelar", cancelPendingIntent)
         startForeground(NOTIFICATION_ID, notificationBuilder?.build())
     }
 
@@ -124,9 +133,12 @@ class TimerForegroundService : Service() {
         const val START_TIME = "00:00:00:00"
         const val INVALID = "INVALID"
         const val COMMAND_START = "COMMAND_START"
-        const val COMMAND_STOP = "COMMAND_STOP"
+
+
         const val COMMAND_ID = "COMMAND_ID"
         const val STARTED_TIMER_TIME_MS = "STARTED_TIMER_TIME"
+
+        const val CANCEL_ACTION = "com.idnp.skinguardianapp.data.broadcastReceivers.ACTION_CANCEL"
     }
 
     fun Long.displayTime(): String {

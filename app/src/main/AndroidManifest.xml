@@ -37,6 +37,7 @@
         <service
             android:name=".data.services.LightSensorService"
             />
+        <receiver android:name="com.idnp.skinguardianapp.data.broadcastReceivers.NotificationBroadcastReceiver" />
 
     </application>
 
