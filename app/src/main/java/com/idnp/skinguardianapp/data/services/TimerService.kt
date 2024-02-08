@@ -1,5 +1,13 @@
 package com.idnp.skinguardianapp.data.services
 
+
+import com.idnp.skinguardianapp.ui.view.login.LoginActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -10,29 +18,13 @@ import android.os.CountDownTimer
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.idnp.skinguardianapp.ui.view.login.LoginActivity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+
 class TimerForegroundService : Service() {
 
     private var notificationManager: NotificationManager? = null
-    private var countDownTimer: CountDownTimer? = null
+    private var timer: CountDownTimer? = null
     private var finalTimer: Long = 0L
-
-    private val builder by lazy {
-        NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Timer")
-            .setGroup("Timer")
-            .setGroupSummary(true)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(getPendingIntent())
-            .setSmallIcon(android.R.drawable.alert_light_frame)
-            .setOngoing(false)
-    }
+    private var notificationBuilder: NotificationCompat.Builder? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -53,39 +45,60 @@ class TimerForegroundService : Service() {
         when (intent?.extras?.getString(COMMAND_ID) ?: INVALID) {
             COMMAND_START -> {
                 finalTimer = intent?.extras?.getLong(STARTED_TIMER_TIME_MS) ?: return
-                startTimer(finalTimer)
+                startTimer()
+                startForegroundAndShowNotification()
             }
             INVALID -> return
         }
     }
 
-    private fun startTimer(timeInMillis: Long) {
-        countDownTimer?.cancel()
-
-        countDownTimer = object : CountDownTimer(timeInMillis, INTERVAL) {
+    private fun startTimer() {
+        timer?.cancel()
+        timer = object : CountDownTimer(finalTimer, INTERVAL) {
             override fun onTick(millisUntilFinished: Long) {
-                updateNotification(millisUntilFinished)
+                updateNotification(millisUntilFinished.displayTime().dropLast(3))
             }
 
             override fun onFinish() {
-                stopServiceAndNotification()
+                stopForegroundAndRemoveNotification()
+                stopSelf()
             }
-        }.start()
+        }
+        timer?.start()
     }
 
-    private fun updateNotification(timeInMillis: Long) {
-        notificationManager?.notify(
-            NOTIFICATION_ID,
-            getNotification(timeInMillis.displayTime().dropLast(3))
+    private fun updateNotification(content: String) {
+        notificationBuilder?.setContentText(content)
+        notificationManager?.notify(NOTIFICATION_ID, notificationBuilder?.build())
+    }
+
+    private fun startForegroundAndShowNotification() {
+        createChannel()
+        notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Timer")
+            .setGroup("Timer")
+            .setGroupSummary(true)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(getPendingIntent())
+            .setSmallIcon(android.R.drawable.alert_light_frame)
+            .setOngoing(true)
+        startForeground(NOTIFICATION_ID, notificationBuilder?.build())
+    }
+
+    private fun stopForegroundAndRemoveNotification() {
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        notificationManager?.cancel(NOTIFICATION_ID)
+    }
+
+    private fun createChannel() {
+        val channelName = "pomodoro"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val notificationChannel = NotificationChannel(
+            CHANNEL_ID, channelName, importance
         )
+        notificationManager?.createNotificationChannel(notificationChannel)
     }
-
-    private fun stopServiceAndNotification() {
-        stopForeground(true)
-        stopSelf()
-    }
-
-    private fun getNotification(content: String) = builder.setContentText(content).build()
 
     private fun getPendingIntent(): PendingIntent? {
         val resultIntent = Intent(this, LoginActivity::class.java)
@@ -94,23 +107,31 @@ class TimerForegroundService : Service() {
             this,
             0,
             resultIntent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
-        )
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        timer?.cancel()
     }
 
     companion object {
+
         private const val CHANNEL_ID = "Channel_ID"
         private const val NOTIFICATION_ID = 777
         private const val INTERVAL = 1000L
-        const val STARTED_TIMER_TIME_MS = "STARTED_TIMER_TIME"
+
+        const val START_TIME = "00:00:00:00"
         const val INVALID = "INVALID"
         const val COMMAND_START = "COMMAND_START"
+        const val COMMAND_STOP = "COMMAND_STOP"
         const val COMMAND_ID = "COMMAND_ID"
+        const val STARTED_TIMER_TIME_MS = "STARTED_TIMER_TIME"
     }
 
     fun Long.displayTime(): String {
         if (this <= 0L) {
-            return "00:00:00:00"
+            return START_TIME
         }
         val h = this / 1000 / 3600
         val m = this / 1000 % 3600 / 60
@@ -126,11 +147,5 @@ class TimerForegroundService : Service() {
         } else {
             "0$count"
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        countDownTimer?.cancel()
-        Log.d("Servicio", "OnDestroy: Deteniendo servicio")
     }
 }

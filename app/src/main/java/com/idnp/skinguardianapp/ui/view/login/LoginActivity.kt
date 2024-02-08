@@ -35,12 +35,12 @@ class LoginActivity : AppCompatActivity() {
         initListeners()
 
 //        startTime = System.currentTimeMillis()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (!checkPermissions()) {
-                requestPermissions()
-            }
-        } else {
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            if (!checkPermissions()) {
+//                requestPermissions()
+//            }
+//        } else {
+//        }
 
     }
 
@@ -86,9 +86,6 @@ class LoginActivity : AppCompatActivity() {
 //        startService(serviceIntent)
 //    }
 
-
-    private var startTime = 0L
-    private var uniqueNotificationId = 0
     private fun initListeners() {
         binding.btnLogin.setOnClickListener {
             checkUserAccount()

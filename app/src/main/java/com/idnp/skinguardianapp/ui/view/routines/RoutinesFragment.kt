@@ -74,6 +74,7 @@ class RoutinesFragment : Fragment() {
             routines,
             {pos -> onItemSelected(pos)},
             {time ->
+
                 val startIntent = Intent(context, TimerForegroundService::class.java)
                 startIntent.putExtra(
                     TimerForegroundService.COMMAND_ID,
