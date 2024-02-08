@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import com.idnp.skinguardianapp.R
 import com.idnp.skinguardianapp.data.database.SkinGuardian
 import com.idnp.skinguardianapp.data.model.User
+import com.idnp.skinguardianapp.data.services.LightSensorService
 import com.idnp.skinguardianapp.databinding.ActivityLoginBinding
 import com.idnp.skinguardianapp.ui.view.home.BaseActivity
 import com.idnp.skinguardianapp.ui.viewModel.LoginViewModel
@@ -42,6 +43,9 @@ class LoginActivity : AppCompatActivity() {
         } else {
         }
 
+
+        val serviceIntent = Intent(this, LightSensorService::class.java)
+        startService(serviceIntent)
     }
 
     //////////////

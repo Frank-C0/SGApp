@@ -8,6 +8,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.*
+import android.util.Log
 import androidx.core.app.NotificationCompat
 
 class LightSensorService : Service(), SensorEventListener {
@@ -15,10 +16,13 @@ class LightSensorService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var lightSensor: Sensor? = null
     private var maxLux: Float = 0f
+    private var thresholdLux: Float = 0f // Umbral de luz deseado
+    private var aboveThresholdDuration: Long = 0
+    private val thresholdDurationMillis: Long = 5000 // 5 segundos
 
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "LightSensorServiceChannel"
-        private const val NOTIFICATION_ID = 12745
+        private const val NOTIFICATION_ID = 12345
     }
 
     override fun onCreate() {
@@ -30,7 +34,7 @@ class LightSensorService : Service(), SensorEventListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_GAME)
         return START_STICKY
     }
 
@@ -48,24 +52,35 @@ class LightSensorService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type == Sensor.TYPE_LIGHT) {
             val lux = event.values[0]
+            Log.d("Light", "Luz: $lux")
             if (lux > maxLux) {
                 maxLux = lux
-                Handler(Looper.getMainLooper()).postDelayed({
+            }
+
+            if (lux > thresholdLux) {
+                aboveThresholdDuration += event.timestamp - (SystemClock.elapsedRealtimeNanos() / 1000000)
+
+                Log.d("Light", "Luz tiempo: $aboveThresholdDuration")
+                if (aboveThresholdDuration >= thresholdDurationMillis) {
                     showNotification("Max light detected", "Maximum light level: $maxLux")
-                    stopSelf()
-                }, 5000) // 5 seconds delay
+//                    stopSelf()
+                }
+            } else {
+                aboveThresholdDuration = 0
             }
         }
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            "Light Sensor Service Channel",
-            NotificationManager.IMPORTANCE_DEFAULT
-        )
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                "Light Sensor Service Channel",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
     }
 
     private fun createNotification(): Notification {
@@ -86,3 +101,4 @@ class LightSensorService : Service(), SensorEventListener {
         manager.notify(NOTIFICATION_ID, notification)
     }
 }
+
