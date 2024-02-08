@@ -76,15 +76,22 @@ class TimerForegroundService : Service() {
 
     private fun startForegroundAndShowNotification() {
         createChannel()
-        val cancelIntent = Intent(this, NotificationBroadcastReceiver::class.java).apply {
+        val cancelIntent = Intent(
+            this,
+            NotificationBroadcastReceiver::class.java
+        ).apply {
             action = CANCEL_ACTION
         }
         val cancelPendingIntent: PendingIntent =
-            PendingIntent.getBroadcast(this, 0, cancelIntent, PendingIntent.FLAG_IMMUTABLE)
-
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                cancelIntent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
         notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Timer")
-            .setGroup("Timer")
+            .setContentTitle("Temporizador")
+            .setGroup("Temporizadores")
             .setGroupSummary(true)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
