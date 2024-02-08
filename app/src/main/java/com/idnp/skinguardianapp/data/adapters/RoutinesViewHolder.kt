@@ -10,12 +10,20 @@ import com.idnp.skinguardianapp.R
 import com.idnp.skinguardianapp.data.model.Routine
 import com.idnp.skinguardianapp.databinding.ItemRoutineBinding
 
-class RoutinesViewHolder(view: View): RecyclerView.ViewHolder(view) {
+class RoutinesViewHolder(
+    view: View
+): RecyclerView.ViewHolder(view) {
     private val binding = ItemRoutineBinding.bind(view)
     private val tvRoutineTitle = binding.tvRoutineTitle
     private val tvRoutineDesc = binding.tvRoutineDescription
 
-    fun render(routine: Routine){
+
+    fun render(
+        routine: Routine,
+        position: Int,
+        onCheckBoxClicked: (Int) -> Unit,
+        onButtonClick: (Int) -> Unit
+    ){
         tvRoutineTitle.text = routine.title
         tvRoutineDesc.text = routine.Description
         binding.cbRoutine.isChecked = routine.isSelected
@@ -26,12 +34,14 @@ class RoutinesViewHolder(view: View): RecyclerView.ViewHolder(view) {
             Log.i("checkbox Checked", "ON")
 
         }
+
         else{
             tvRoutineTitle.paintFlags = tvRoutineTitle.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
             tvRoutineDesc.paintFlags = tvRoutineDesc.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
         }
 
-
+        binding.button.setOnClickListener{onButtonClick(position)}
+        binding.cbRoutine.setOnClickListener{onCheckBoxClicked(position)}
     }
 
 }

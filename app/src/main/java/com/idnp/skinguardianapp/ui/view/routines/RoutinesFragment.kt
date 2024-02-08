@@ -1,6 +1,7 @@
 package com.idnp.skinguardianapp.ui.view.routines
 
 import android.app.Dialog
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.idnp.skinguardianapp.R
 import com.idnp.skinguardianapp.data.adapters.RoutinesAdapter
 import com.idnp.skinguardianapp.data.model.Routine
+import com.idnp.skinguardianapp.data.services.TimerForegroundService
 import com.idnp.skinguardianapp.databinding.FragmentRoutinesBinding
 
 
@@ -54,7 +56,18 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun initUI(){
-        routinesAdapter = RoutinesAdapter(routines){pos -> onItemSelected(pos)}
+        routinesAdapter = RoutinesAdapter(
+            routines,
+            {pos -> onItemSelected(pos)},
+            {pos ->
+                val startIntent = Intent(context, TimerForegroundService::class.java)
+                startIntent.putExtra(
+                    TimerForegroundService.COMMAND_ID,
+                    TimerForegroundService.COMMAND_START
+                )
+                startIntent.putExtra(TimerForegroundService.STARTED_TIMER_TIME_MS, 20000L)
+                context?.startService(startIntent)
+            })
         rvRoutines.layoutManager = LinearLayoutManager(context)
         rvRoutines.adapter = routinesAdapter
 
@@ -73,7 +86,13 @@ class RoutinesFragment : Fragment() {
             val currentRoutineDesc = etRoutineDescription.text.toString()
 
             if(currentRoutineTitle.isNotEmpty() && currentRoutineDesc.isNotEmpty()){
-                routines.add(Routine(etRoutineTitle.text.toString(),etRoutineDescription.text.toString()))
+                routines.add(Routine(
+                    etRoutineTitle.text.toString(),
+                    etRoutineDescription.text.toString(),
+                    false,
+                    true,
+                    30000L
+                ))
                 updateTasks()
                 dialog.hide()
 
